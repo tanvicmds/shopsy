@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopsy</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Ephesis&family=Mozilla+Text:wght@200..700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <p class="logo">Shopsy</p>
+        <ul class="nav-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Products</a></li>
+            <li><a href="#">Cart</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-layout">
+        <aside class="sidebar">
+            <h2>Filters</h2>
+            <div id="categoryFilters"></div>
+        </aside>
+
+        <main class="main-content">
+            <section class="search-area">
+                <input id="searchInput" type="search" placeholder="Search products..." />
+            </section>
+
+            <section id="productGrid" class="result-area"></section>
+            <section class="pagination">
+                <button id="prevPage" type="button">Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" type="button">Next</button>
+            </section>
+        </main>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+
+</html>

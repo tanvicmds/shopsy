@@ -1,0 +1,290 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    /* border: solid red 1px; */
+    font-family: "Mozilla Text", sans-serif;
+}
+
+body {
+    background-color: #f3f6fb;
+    color: #111827;
+}
+
+.navbar {
+    display: flex;
+    align-items: center;
+    padding: 12px 32px;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    box-shadow: 0 1px 8px rgba(15, 23, 42, 0.08);
+
+}
+
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    flex: 1;
+    font-size: 16px;
+    justify-content: space-evenly;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #374151;
+}
+
+.nav-links a:hover {
+    color: #324f8e;
+}
+
+.logo {
+    font-family: "Ephesis", cursive;
+    font-size: 60px;
+}
+
+.page-layout {
+    display: flex;
+    gap: 24px;
+    padding: 24px 32px;
+    align-items: flex-start;
+}
+
+.main-content {
+    flex: 1;
+    width: 100%;
+}
+
+.sidebar {
+    width: 20%;
+    font-size: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+#searchInput {
+    font-size: 20px;
+    font-family: "Courier Prime", monospace;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    width: 100%;
+    max-width: 520px;
+    padding: 12px 14px;
+}
+
+.search-area {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.add-product-btn,
+.product-form button {
+    background: #0f766e;
+}
+
+.add-product-btn:hover,
+.product-form button:hover {
+    background: #115e59;
+}
+
+.edit-btn:hover {
+    color: #1d4ed8;
+}
+
+.delete-btn:hover {
+    color: #dc2626;
+}
+
+#categoryFilters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.categoryFilter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.categoryFilter input {
+    cursor: pointer;
+}
+
+.result-area {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+.product-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 360px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.product-img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.product-id {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.product-name {
+    font-size: 17px;
+}
+
+.product-desc {
+    font-size: 14px;
+    color: #4b5563;
+    flex: 1;
+}
+
+.product-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f766e;
+}
+
+.product-rating {
+    font-size: 14px;
+    color: #b7791f;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.card-actions button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background: #eef2ff;
+}
+
+.delete-btn:hover {
+    background: #fee2e2;
+}
+
+.add-product-card {
+    justify-content: center;
+}
+
+.add-product-btn,
+.product-form button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.product-form label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.product-form input,
+.product-form textarea {
+    padding: 9px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.product-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin: 28px 0;
+}
+
+.pagination button {
+    padding: 9px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-error {
+    min-height: 18px;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 12px 18px;
+    }
+
+    .logo {
+        font-size: 44px;
+    }
+
+    .nav-links {
+        gap: 14px;
+        font-size: 14px;
+    }
+
+    .page-layout {
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .result-area {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
