@@ -88,6 +88,7 @@ function loadCategories() {
         .then(data => {
             const filtersArea = document.getElementById("categoryFilters");
             for (const category of data) {
+                state.categories.push(category);
                 const label = document.createElement("div");
                 label.className = "categoryFilter";
                 label.innerHTML = `
@@ -147,18 +148,32 @@ function loadAddProductCard() {
 
 function showProductForm(product = {}) {
     const formArea = document.getElementById("productFormArea");
+    const selectedCategory = String(product.category || "").trim().toLowerCase();
+    const txt = state.categories.map(category => {
+        const categoryValue = category.slug;
+        const categoryName = category.name;
+        const isSelected = selectedCategory === categoryValue.toLowerCase() || selectedCategory === categoryName.toLowerCase();
+
+        return `<option value="${categoryValue}" ${isSelected ? "selected" : ""}>${categoryName}</option>`;
+    }).join("");
+
     formArea.innerHTML = `
         <form id="productForm" class="product-form" novalidate>
             <label for="productTitle">Title</label>
-            <input id="productTitle" type="text" value="${product.title || ""}">
+            <input id="productTitle" type="text" placeholder="Enter Title..." value="${product.title || ""}">
             <label for="productPrice">Price</label>
-            <input id="productPrice" type="number" value="${product.price || ""}">
+            <input id="productPrice" type="number" placeholder="Enter Price..." value="${product.price || ""}">
             <label for="productThumbnail">Image URL</label>
-            <input id="productThumbnail" type="text" value="${product.thumbnail || ""}">
+            <input id="productThumbnail" type="text" placeholder="Enter Image URL..." value="${product.thumbnail || ""}">
             <label for="productRating">Rating</label>
-            <input id="productRating" type="number" step="0.1" value="${product.rating || ""}">
+            <input id="productRating" type="number" step="0.1" placeholder="Enter Rating..." value="${product.rating || ""}">
             <label for="productDescription">Description</label>
-            <textarea id="productDescription">${product.description || ""}</textarea>
+            <textarea id="productDescription" placeholder="Enter Description...">${product.description || ""}</textarea>
+            <label for="category">Category</label>
+            <select name="category" id="category">
+            <option value="">Select Category</option>
+            ${txt}
+            </select>
             <button type="submit">${state.editingProductId ? "Update" : "Add"}</button>
             <p id="formError" class="form-error"></p>
         </form>
@@ -169,7 +184,7 @@ function showProductForm(product = {}) {
 
 function validateProductForm(productData) {
     if (!productData.title || !productData.price || productData.price <= 0
-        || !productData.thumbnail || !productData.description
+        || !productData.thumbnail || !productData.description || !productData.category
     ) {
         return "Add Valid Inputs.";
     }
@@ -188,7 +203,8 @@ function handleProductFormSubmit(event) {
         price: Number(document.getElementById("productPrice").value),
         thumbnail: document.getElementById("productThumbnail").value.trim(),
         rating: Number(document.getElementById("productRating").value),
-        description: document.getElementById("productDescription").value.trim()
+        description: document.getElementById("productDescription").value.trim(),
+        category: document.getElementById("category").value.trim()
     };
     const errorMessage = validateProductForm(productData);
     const formError = document.getElementById("formError");
@@ -228,6 +244,13 @@ function handleCategoryChange(event) {
     Promise.all(categoryRequests)
         .then(results => {
             let filteredProducts = applyLocalChanges(results.flatMap(result => result.products));
+            filteredProducts = [
+                ...filteredProducts,
+                ...getMatchingLocalProducts().filter(product =>
+                    product.category &&
+                    Array.from(filteredCategories).some(label => label.id === product.category.toLowerCase())
+                )
+            ];
             if (state.searchQuery) {
                 filteredProducts = filteredProducts.filter(product =>
                     product.title.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
@@ -294,26 +317,27 @@ function addProduct(productData) {
 }
 
 function updateProduct(id, productData) {
+    const normalizedProductData = { ...productData, id };
+    const isLocalProduct = state.localProducts.some(product => product.id === id);
+
+    if (isLocalProduct) {
+        state.localProducts = state.localProducts.map(product =>
+            product.id === id ? { ...product, ...normalizedProductData } : product
+        );
+    } else {
+        const existingProduct = state.currentProducts.find(product => product.id === id) || state.updatedProducts[id] || {};
+        state.updatedProducts[id] = { ...existingProduct, ...normalizedProductData };
+    }
+
+    state.editingProductId = null;
+    loadProducts();
+
     return fetch(`https://dummyjson.com/products/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(productData)
     })
         .then(res => res.json())
-        .then(updatedProduct => {
-            const isLocalProduct = state.localProducts.some(product => product.id === id);
-
-            if (isLocalProduct) {
-                state.localProducts = state.localProducts.map(product =>
-                    product.id === id ? { ...product, ...updatedProduct } : product
-                );
-            } else {
-                state.updatedProducts[id] = updatedProduct;
-            }
-
-            state.editingProductId = null;
-            loadProducts();
-        })
         .catch(error => console.error(error));
 }
 
@@ -360,7 +384,8 @@ const state = {
     editingProductId: null,
     localProducts: [],
     updatedProducts: {},
-    deletedProductIds: []
+    deletedProductIds: [],
+    categories: []
 };
 
 Promise.all([loadProducts(), loadCategories()])
