@@ -14,14 +14,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
-<body>
+<body class="user">
     <nav class="navbar">
         <p class="logo">Shopsy</p>
         <ul class="nav-links">
-            <li><a href="#">Home</a></li>
+            <li><a href="./loginpage.html">Home</a></li>
             <li><a href="#">Products</a></li>
-            <li><a href="#">Cart</a></li>
+            <li><a href="#" id="cartNavBtn">Cart</a></li>
+            <li class="nav-role"><i class="fa-solid fa-user"></i> Customer</li>
+            <li><a href="./loginpage.html" class="logout-btn">Logout</a></li>
         </ul>
+
     </nav>
 
     <div class="page-layout">
@@ -43,7 +46,7 @@
             </section>
         </main>
     </div>
-
     <script src="./script.js"></script>
 </body>
+
 </html>

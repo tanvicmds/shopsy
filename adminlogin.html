@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopsy</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Ephesis&family=Mozilla+Text:wght@200..700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body class="admin">
+    <nav class="navbar">
+        <p class="logo">Shopsy</p>
+        <ul class="nav-links">
+            <li><a href="./loginpage.html">Home</a></li>
+            <li><a href="#">Products</a></li>
+            <li><button id="undoAllBtn" type="button" class="undo-all-btn">Undo All Changes</button></li>
+            <li class="nav-role"><i class="fa-solid fa-user-shield"></i> Admin</li>
+            <li><a href="./loginpage.html" class="logout-btn">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-layout">
+        <aside class="sidebar">
+            <h2>Filters</h2>
+            <div id="categoryFilters"></div>
+        </aside>
+
+        <main class="main-content">
+            <section class="search-area">
+                <input id="searchInput" type="search" placeholder="Search products..." />
+                <button id="openAddFormBtn" class="add-product-btn" type="button">Add Product</button>
+            </section>
+
+            <section id="productGrid" class="result-area"></section>
+            <section class="pagination">
+                <button id="prevPage" type="button">Previous</button>
+                <span id="pageInfo">Page 1</span>
+                <button id="nextPage" type="button">Next</button>
+            </section>
+        </main>
+    </div>
+    <div id="formModalOverlay" class="modal-overlay">
+        <div class="modal-box" id="add-product-form">
+            <button id="closeFormBtn" class="modal-close">&times;</button>
+            <h3 id="formTitle">Add/Edit Product</h3>
+            <div id="productFormArea"></div>
+        </div>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+
+</html>

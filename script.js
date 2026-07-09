@@ -38,7 +38,6 @@ function renderProducts(products) {
         };
         loadCard(productObj);
     }
-    loadAddProductCard();
 }
 
 function loadProducts() {
@@ -118,17 +117,209 @@ function loadCard(cardObj) {
         <p class="product-price">&#8377;${cardObj.item_price}</p>
         <p class="product-rating">Rating: ${cardObj.item_rating}</p>
         <div class="card-actions">
-            <button class="edit-btn" type="button" data-id="${cardObj.item_id}">
-                <i class="fa-solid fa-pencil"></i>
-            </button>
-            <button class="delete-btn" type="button" data-id="${cardObj.item_id}">
-                <i class="fa-solid fa-trash"></i>
+            <button class="detail-btn" type="button" data-id="${cardObj.item_id}">
+                View Details
             </button>
         </div>
     `;
-    card.querySelector(".edit-btn").addEventListener("click", handleEditProduct);
-    card.querySelector(".delete-btn").addEventListener("click", handleDeleteProduct);
+    const admin_txt = `
+        <button class="edit-btn" type="button" data-id="${cardObj.item_id}">
+            <i class="fa-solid fa-pencil"></i>
+        </button>
+        <button class="delete-btn" type="button" data-id="${cardObj.item_id}">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `
+    const user_txt = `
+        <button class="cart-btn" type="button" data-id="${cardObj.item_id}">
+            <i class="fa-solid fa-cart-shopping"></i>
+        </button>
+    `
+    if (document.body.classList.contains("admin")) {
+        card.querySelector(".card-actions").innerHTML += admin_txt;
+        card.querySelector(".edit-btn").addEventListener("click", handleEditProduct);
+        card.querySelector(".delete-btn").addEventListener("click", handleDeleteProduct);
+    }
+    if (document.body.classList.contains("user")) {
+        card.querySelector(".card-actions").innerHTML += user_txt;
+        card.querySelector(".cart-btn").addEventListener("click", handlecartButtonClick);
+
+    }
+    card.querySelector(".detail-btn").addEventListener("click", handledetailButtonClick);
     product_grid.appendChild(card);
+}
+
+function handlecartButtonClick(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    const product = state.currentProducts.find(p => p.id === id) || state.localProducts.find(p => p.id === id);
+    if (product) {
+        addToCart(product);
+    }
+}
+
+function handledetailButtonClick(event) {
+    const id = Number(event.currentTarget.dataset.id);
+    const product = state.currentProducts.find(p => p.id === id) || state.localProducts.find(p => p.id === id);
+    if (product) {
+        showProductDetails(product);
+    }
+}
+
+function showProductDetails(product) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+
+    const isUser = document.body.classList.contains("user");
+    const cartButtonHTML = isUser ?
+        `<button class="modal-btn modal-confirm cart-btn-large" data-id="${product.id}">
+            <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+        </button>` : "";
+    const stockHTML = product.stock !== undefined ? `<span class="details-badge ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}">${product.stock > 0 ? 'In Stock (' + product.stock + ')' : 'Out of Stock'}</span>` : "";
+    const brandHTML = product.brand ? `<p class="details-meta"><strong>Brand:</strong> ${product.brand}</p>` : "";
+    const tagsHTML = (product.tags && product.tags.length) ? product.tags.map(tag => `<span class="details-tag">${tag}</span>`).join("") : "";
+    let priceHTML = `<span class="new-price">₹${product.price}</span>`;
+    if (product.discountPercentage) {
+        const originalPrice = (product.price / (1 - (product.discountPercentage / 100))).toFixed(2);
+        priceHTML = `<span class="old-price">₹${originalPrice}</span> <span class="new-price">₹${product.price}</span> <span class="discount-badge">-${product.discountPercentage}%</span>`;
+    }
+    const extraInfoHTML = product.shippingInformation || product.warrantyInformation || product.returnPolicy ? `
+        <div class="details-extra">
+            ${product.shippingInformation ? `<p><i class="fa-solid fa-truck"></i> ${product.shippingInformation}</p>` : ""}
+            ${product.warrantyInformation ? `<p><i class="fa-solid fa-shield-halved"></i> ${product.warrantyInformation}</p>` : ""}
+            ${product.returnPolicy ? `<p><i class="fa-solid fa-rotate-left"></i> ${product.returnPolicy}</p>` : ""}
+        </div>
+    ` : "";
+    overlay.innerHTML = `
+        <div class="modal-box details-modal-box">
+            <button class="modal-close">&times;</button>
+            
+            <div class="details-content">
+                <img src="${product.thumbnail}" alt="${product.title}" class="details-img">
+                
+                <div class="details-info">
+                    <div style="display:flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <p class="details-id">ID: ${product.id} | Category: ${product.category || 'N/A'}</p>
+                            ${brandHTML}
+                        </div>
+                        ${stockHTML}
+                    </div>
+                    
+                    <h2 class="details-title">${product.title}</h2>
+                    <div>${tagsHTML}</div>
+                    
+                    <p class="details-price">${priceHTML}</p>
+                    <p class="details-rating">⭐ Rating: ${product.rating} ${product.reviews ? `(${product.reviews.length} reviews)` : ""}</p>
+                    
+                    <p class="details-desc">${product.description}</p>
+                    
+                    ${extraInfoHTML}
+                </div>
+            </div>
+            
+            <div class="modal-actions details-actions">
+                ${cartButtonHTML}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const closeBtn = overlay.querySelector(".modal-close");
+    const closeModal = () => document.body.removeChild(overlay);
+    closeBtn.addEventListener("click", closeModal);
+
+    if (isUser) {
+        overlay.querySelector(".cart-btn-large").onclick = () => {
+            addToCart(product);
+            overlay.remove();
+        };
+    }
+}
+
+function showCartModal() {
+    const cart = JSON.parse(localStorage.getItem("shopsy_cart")) || [];
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    let total = 0;
+    const cartItemsHTML = cart.length === 0
+        ? '<p class="cart-empty">Your cart is empty.</p>'
+        : cart.map(item => {
+            total += item.price * item.quantity;
+            return `
+            <div class="cart-item-row" style="align-items: center;">
+                <div class="cart-item-info-wrap" style="align-items: center;">
+                    <!-- The new Trash Button -->
+                    <button class="cart-remove-btn" data-id="${item.id}" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:18px;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    <img src="${item.thumbnail}" class="cart-item-img">
+                    <div>
+                        <p class="cart-item-title">${item.title}</p>
+                        <p class="cart-item-meta">₹${item.price} x ${item.quantity}</p>
+                    </div>
+                </div>
+                <div class="cart-item-price">₹${(item.price * item.quantity).toFixed(2)}</div>
+            </div>`;
+        }).join("");
+
+    overlay.innerHTML = `
+        <div class="modal-box details-modal-box">
+            <button class="modal-close">&times;</button>
+            <h2 class="modal-title cart-title">Your Shopping Cart</h2>
+            
+            <div class="cart-list-container">
+                ${cartItemsHTML}
+            </div>
+            
+            ${cart.length > 0 ? `<h3 class="cart-total">Total: ₹${total.toFixed(2)}</h3>` : ""}
+            
+            <div class="modal-actions details-actions">
+                <button class="modal-btn modal-cancel" id="closeCartBtn">Continue Shopping</button>
+                ${cart.length > 0 ? `<button class="modal-btn modal-confirm cart-btn-large" id="checkoutBtn">Checkout</button>` : ""}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const closeModal = () => overlay.remove();
+    overlay.querySelector(".modal-close").onclick = closeModal;
+    document.getElementById("closeCartBtn").onclick = closeModal;
+    const removeBtns = overlay.querySelectorAll(".cart-remove-btn");
+    removeBtns.forEach(btn => {
+        btn.onclick = (e) => {
+            const id = Number(e.currentTarget.dataset.id);
+            removeFromCart(id);
+            closeModal();
+            showCartModal();
+        };
+    });
+    const checkoutBtn = document.getElementById("checkoutBtn");
+    if (checkoutBtn) {
+        checkoutBtn.onclick = () => {
+            alert("Checkout successful! Thank you for shopping with Shopsy.");
+            localStorage.setItem("shopsy_cart", JSON.stringify([]));
+            closeModal();
+        };
+    }
+}
+
+function addToCart(product) {
+    const cart = JSON.parse(localStorage.getItem("shopsy_cart")) || [];
+    const existingItem = cart.find(item => item.id === product.id);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({ ...product, quantity: 1 });
+    }
+    localStorage.setItem("shopsy_cart", JSON.stringify(cart));
+    alert(`Added ${product.title} to cart!`);
+}
+
+function removeFromCart(id) {
+    let cart = JSON.parse(localStorage.getItem("shopsy_cart")) || [];
+    cart = cart.filter(item => item.id !== id);
+    localStorage.setItem("shopsy_cart", JSON.stringify(cart));
 }
 
 function loadAddProductCard() {
@@ -147,6 +338,8 @@ function loadAddProductCard() {
 }
 
 function showProductForm(product = {}) {
+    document.getElementById("formModalOverlay").style.display = "flex";
+    document.getElementById("formTitle").innerText = state.editingProductId ? "Edit Product" : "Add Product";
     const formArea = document.getElementById("productFormArea");
     const selectedCategory = String(product.category || "").trim().toLowerCase();
     const txt = state.categories.map(category => {
@@ -219,6 +412,7 @@ function handleProductFormSubmit(event) {
     } else {
         addProduct(productData);
     }
+    document.getElementById("formModalOverlay").style.display = "none";
 }
 
 function handleCategoryChange(event) {
@@ -310,8 +504,10 @@ function addProduct(productData) {
         .then(res => res.json())
         .then(newProduct => {
             state.localProducts.unshift(newProduct);
+            savetoLocalStorage();
             state.skip = 0;
             loadProducts();
+            alert(`Product "${newProduct.title}" added successfully!`);
         })
         .catch(error => console.error(error));
 }
@@ -328,8 +524,9 @@ function updateProduct(id, productData) {
         const existingProduct = state.currentProducts.find(product => product.id === id) || state.updatedProducts[id] || {};
         state.updatedProducts[id] = { ...existingProduct, ...normalizedProductData };
     }
-
     state.editingProductId = null;
+    savetoLocalStorage();
+    alert(`Product updated successfully!`);
     loadProducts();
 
     return fetch(`https://dummyjson.com/products/${id}`, {
@@ -349,7 +546,9 @@ function deleteProduct(id) {
         .then(() => {
             state.localProducts = state.localProducts.filter(product => product.id !== id);
             state.deletedProductIds.push(id);
+            savetoLocalStorage();
             loadProducts();
+            alert(`Product deleted successfully!`);
         })
         .catch(error => console.error(error));
 }
@@ -364,9 +563,73 @@ function handleEditProduct(event) {
     showProductForm(product);
 }
 
+// function handleDeleteProduct(event) {
+//     const id = Number(event.currentTarget.dataset.id);
+//     deleteProduct(id);
+// }
+
 function handleDeleteProduct(event) {
     const id = Number(event.currentTarget.dataset.id);
-    deleteProduct(id);
+    showCustomConfirm(
+        "Are you sure?",
+        "Are you sure you want to delete this product? This action cannot be undone.",
+        "Delete",
+        () => {
+            deleteProduct(id);
+        }
+    );
+}
+
+
+function showCustomConfirm(title, message, confirmBtnText, onConfirm) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+
+    overlay.innerHTML = `
+        <div class="modal-box">
+            <button class="modal-close">&times;</button>
+            <h3 class="modal-title">${title}</h3>
+            <p class="modal-message">${message}</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-cancel">Cancel</button>
+                <button class="modal-btn modal-confirm">${confirmBtnText}</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    const closeBtn = overlay.querySelector(".modal-close");
+    const cancelBtn = overlay.querySelector(".modal-cancel");
+    const confirmBtn = overlay.querySelector(".modal-confirm");
+    const closeModal = () => {
+        document.body.removeChild(overlay);
+    }
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    confirmBtn.addEventListener("click", () => {
+        onConfirm();
+        closeModal();
+    });
+}
+
+
+function savetoLocalStorage() {
+    localStorage.setItem(storage_key, JSON.stringify({
+        localProducts: state.localProducts,
+        updatedProducts: state.updatedProducts,
+        deletedProductIds: state.deletedProductIds,
+        history: state.history
+    }));
+}
+
+const storage_key = "shopsy_data";
+function loadLocalStorage() {
+    const savedData = localStorage.getItem(storage_key);
+    if (!savedData) {
+        return null;
+    } else {
+        return JSON.parse(savedData);
+    }
 }
 
 const product_grid = document.getElementById("productGrid");
@@ -374,7 +637,12 @@ const searchInput = document.getElementById("searchInput");
 const prevPageBtn = document.getElementById("prevPage");
 const nextPageBtn = document.getElementById("nextPage");
 const pageInfo = document.getElementById("pageInfo");
+const cartBtns = document.getElementsByClassName("cart-btn");
+const detailBtns = document.getElementsByClassName("detail-btn");
 
+
+
+const savedLocalData = loadLocalStorage();
 const state = {
     limit: 15,
     skip: 0,
@@ -382,10 +650,11 @@ const state = {
     total: 0,
     currentProducts: [],
     editingProductId: null,
-    localProducts: [],
-    updatedProducts: {},
-    deletedProductIds: [],
-    categories: []
+    localProducts: savedLocalData?.localProducts ?? [],
+    updatedProducts: savedLocalData?.updatedProducts ?? {},
+    deletedProductIds: savedLocalData?.deletedProductIds ?? [],
+    categories: [],
+    history: savedLocalData?.history ?? [],
 };
 
 Promise.all([loadProducts(), loadCategories()])
@@ -418,6 +687,7 @@ nextPageBtn.addEventListener("click", () => {
     }
 });
 
+
 const handleSearch = debounce(() => {
     state.searchQuery = searchInput.value.trim();
     state.skip = 0;
@@ -430,6 +700,53 @@ const handleSearch = debounce(() => {
 }, 500);
 
 searchInput.addEventListener("input", handleSearch);
+if (document.body.classList.contains("admin")) {
+    const undoAllBtn = document.getElementById("undoAllBtn");
+    if (undoAllBtn) {
+        undoAllBtn.addEventListener("click", () => {
+            showCustomConfirm(
+                "Are you sure?",
+                "Are you sure you want to undo ALL local changes? This action cannot be undone.",
+                "Undo All",
+                () => {
+                    state.localProducts = [];
+                    state.updatedProducts = {};
+                    state.deletedProductIds = [];
+                    state.history = [];
+                    savetoLocalStorage();
+                    loadProducts();
+                }
+            );
+        });
+    }
+}
+
+if (document.body.classList.contains("admin")) {
+    const openAddFormBtn = document.getElementById("openAddFormBtn");
+    if (openAddFormBtn) {
+        openAddFormBtn.addEventListener("click", () => {
+            state.editingProductId = null;
+            showProductForm();
+        });
+    }
+    const closeFormBtn = document.getElementById("closeFormBtn");
+    if (closeFormBtn) {
+        closeFormBtn.addEventListener("click", () => {
+            document.getElementById("formModalOverlay").style.display = "none";
+        });
+    }
+}
+
+if (document.body.classList.contains("user")) {
+    const cartNavBtn = document.getElementById("cartNavBtn");
+    if (cartNavBtn) {
+        cartNavBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            showCartModal();
+        });
+    }
+}
+
 
 
 
